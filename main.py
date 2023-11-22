@@ -161,9 +161,6 @@ def create_base_page(url, account, password):
             driver = webdriver.Chrome()
             # 最大化窗口
             driver.maximize_window()
-            System.setProperty("webdriver.chrome.driver", "C:\\driver\\chromedriver.exe");
-
-
             # 打开Chrome页面
             driver.get(url)
             # 等待账号输入栏可见
