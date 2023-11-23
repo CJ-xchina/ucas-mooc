@@ -2,9 +2,8 @@
 setlocal
 
 REM 设置变量
-set COMMIT_MESSAGE=fix some bugs
+set COMMIT_MESSAGE= fix some bugs
 set LOG_FILE=log.txt
-
 REM 初始化仓库
 echo Initializing repository...
 git init
@@ -19,26 +18,12 @@ git commit -m "%COMMIT_MESSAGE%"
 
 REM 拉取远程代码
 echo Pulling changes from GitHub...
-git pull origin main --allow-unrelated-histories
-IF %ERRORLEVEL% NEQ 0 (
-    echo Pull failed. Resolve conflicts and run the script again.
-    exit /b %ERRORLEVEL%
-)
+git pull origin main
 
-REM 检查远程仓库是否已存在
-git remote -v | findstr "origin"
-IF %ERRORLEVEL% EQU 0 (
-    echo Remote origin already exists. Skipping remote add.
-) ELSE (
-    REM 添加远程仓库
-    echo Adding remote repository...
-    git remote add origin https://github.com/CJ-xchina/ucas-mooc.git
-)
+REM 添加远程仓库
+echo Adding remote repository...
+git remote add origin https://github.com/CJ-xchina/ucas-mooc.git
 
 REM 推送到GitHub
 echo Pushing changes to GitHub...
-git push -u --force origin main
-IF %ERRORLEVEL% NEQ 0 (
-    echo Push failed. Check your credentials and try again.
-    exit /b %ERRORLEVEL%
-)
+git push --set-upstream origin main
