@@ -277,11 +277,11 @@ def create_and_login(url, account, password):
 
 def main():
     # 替换为你的mooc网址
-    url = "http://mooc.mooc.ucas.edu.cn/mycourse/studentstudy?chapterId=12258&courseId=350140000006718&clazzid=350140000010840&enc=e079a683a052b56ec5b571e8b56d5fd1"
+    url = ""
     # mooc账号
-    account = "18873701282"
+    account = ""
     # mooc密码
-    password = "hjs991022"
+    password = ""
 
     n = int(input("请输入视频线程数量："))
 
