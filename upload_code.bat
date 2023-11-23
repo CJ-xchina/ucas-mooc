@@ -2,7 +2,7 @@
 setlocal
 
 REM 设置变量
-set COMMIT_MESSAGE=Initial commit
+set COMMIT_MESSAGE= fix some bugs
 set LOG_FILE=log.txt
 REM 初始化仓库
 echo Initializing repository...

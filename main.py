@@ -48,64 +48,88 @@ def mouseMoveTo(element, driver):
 
 def process_video(idx, url, account, password, maxThreads):
     print("\n-------%s thread is process section %s-------" % (threading.current_thread().name, idx))
-    (driver, a_elements) = create_base_page(url, account, password)
-    a_elements[idx].click()
-    time.sleep(2)
-    iframe1 = driver.find_element(By.ID, 'iframe')
-    driver.switch_to.frame(iframe1)
-    vdsFrames = driver.find_elements(By.CSS_SELECTOR, 'iframe[src="/ananas/modules/video/index.html?v=2023-0105-1556"]')
-    print("\n检测到本页中的视频数量为:", len(vdsFrames))
-
-    # 页面无视频
-    if len(vdsFrames) == 0:
-        driver.quit()
-        return
-
-    for i in range(len(vdsFrames)):
-        driver.switch_to.default_content()
+    driver, a_elements = create_base_page(url, account, password)
+    try:
+        WebDriverWait(driver, 10).until(
+            EC.visibility_of(a_elements[idx])
+        )
+        a_elements[idx].click()
+        time.sleep(2)
+        iframe1 = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((By.ID, 'iframe'))
+        )
         driver.switch_to.frame(iframe1)
-        driver.switch_to.frame(vdsFrames[i])
-        startButton = driver.find_element(By.CLASS_NAME, "vjs-big-play-button")
-        driver.execute_script("arguments[0].scrollIntoViewIfNeeded(true);", startButton)
+        vdsFrames = WebDriverWait(driver, 10).until(
+            EC.visibility_of_all_elements_located(
+                (By.CSS_SELECTOR, 'iframe[src="/ananas/modules/video/index.html?v=2023-0105-1556"]'))
+        )
+        print("\n检测到本页中的视频数量为:", len(vdsFrames))
 
-        controlButton = driver.find_element(By.CLASS_NAME, "vjs-button")
+        # 页面无视频
+        if len(vdsFrames) == 0:
+            driver.quit()
+            return
 
-        # 播放视频
-        startButton.click()
-        time.sleep(0.5)
-        # 暂停视频
-        controlButton.click()
-
-        # 定位到进度条元素
-        progress_element = driver.find_element(By.CLASS_NAME, "vjs-progress-holder")
-
-        # 获取进度条的宽度
-        progress_width = progress_element.size["width"]
-
-
-        # 拖拽视频，减去已经看过的部分，节省时间
-        for distance in np.arange(0.1, 0.6, 0.1):
-            # 计算拖动的距离（根据需要拖动的百分比进行计算）
-            drag_distance = progress_width * distance  # 例如，拖动到进度条一半的位置
-
-            # 使用动作链进行拖动操作
-            action_chains = ActionChains(driver)
-            action_chains.click_and_hold(progress_element).move_by_offset(drag_distance, 0).release().perform()
-
-        # 获取视频总时长，单位：s
-        during = convertTime(driver.find_element(By.CLASS_NAME, "vjs-duration-display").text)
-        # 获取视频已观看时长，单位： s
-        last = convertTime(driver.find_element(By.CLASS_NAME, "vjs-current-time-display").text)
+        for i in range(len(vdsFrames)):
+            driver.switch_to.default_content()
+            driver.switch_to.frame(iframe1)
+            driver.switch_to.frame(vdsFrames[i])
+            startButton = WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.CLASS_NAME, "vjs-big-play-button"))
+            )
+            driver.execute_script("arguments[0].scrollIntoViewIfNeeded(true);", startButton)
 
 
-        # 开始观看视频
-        controlButton.click()
-        print("\n thread %s is watching vedio：" % (i + 1), "总时长：%s" % str(during), "已观看时长：%s" % str(last),  "剩余时长：%s" % str(during - last))
-        for _ in tqdm(range((during - last + 3) // 3), desc=threading.current_thread().name, position=idx % maxThreads):
-            time.sleep(3)
 
-    print("-------%s thread finish %s -------" % (threading.current_thread().name, idx))
-    driver.quit()
+            # 播放视频
+            startButton.click()
+            time.sleep(0.5)
+
+            controlButton = WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.CLASS_NAME, "vjs-button"))
+            )
+            # 暂停视频
+            controlButton.click()
+
+            # 定位到进度条元素
+            progress_element = WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.CLASS_NAME, "vjs-progress-holder"))
+            )
+
+            # 获取进度条的宽度
+            progress_width = progress_element.size["width"]
+
+            # 拖拽视频，减去已经看过的部分，节省时间
+            for distance in np.arange(0.1, 0.6, 0.1):
+                # 计算拖动的距离（根据需要拖动的百分比进行计算）
+                drag_distance = progress_width * distance  # 例如，拖动到进度条一半的位置
+
+                # 使用动作链进行拖动操作
+                action_chains = ActionChains(driver)
+                action_chains.click_and_hold(progress_element).move_by_offset(drag_distance, 0).release().perform()
+
+            # 获取视频总时长，单位：s
+            during = convertTime(WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.CLASS_NAME, "vjs-duration-display"))
+            ).text)
+            # 获取视频已观看时长，单位： s
+            last = convertTime(WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.CLASS_NAME, "vjs-current-time-display"))
+            ).text)
+
+            # 开始观看视频
+            controlButton.click()
+            print("\n thread %s is watching vedio：" % (i + 1), "总时长：%s" % str(during), "已观看时长：%s" % str(last),
+                  "剩余时长：%s" % str(during - last))
+            for _ in tqdm(range((during - last + 3) // 3), desc=threading.current_thread().name, position=idx % maxThreads):
+                time.sleep(3)
+
+        print("-------%s thread finish %s -------" % (threading.current_thread().name, idx))
+    except Exception:
+        print(Exception)
+
+    finally:
+        driver.quit()
 
 
 def deal_vedios(idx, max_threads, url, account, password):
@@ -124,38 +148,54 @@ def deal_vedios(idx, max_threads, url, account, password):
 
 def deal_PPT(index, url, account, password):
     for i in index:
-        (driver, a_elements) = create_base_page(url, account, password)
-        a_elements[i].click()
-        time.sleep(2)
-        # 一层frame特点：id = "iframe"
-        iframe1 = driver.find_element(By.ID, 'iframe')
-        driver.switch_to.frame(iframe1)
-        # 二层frame为视频层,视频可能存在多个
-        iframes = driver.find_elements(By.CSS_SELECTOR, 'iframe[src="/ananas/modules/pdf/index.html?v=2022-1202-1135"]')
-        print("number of PPT in section %s " % i, ": %s" % len(iframes))
-
-        if len(iframes) == 0:
-            driver.quit()
-            continue;
-
-        for j in range(len(iframes)):
-            driver.switch_to.default_content()
+        driver, a_elements = create_base_page(url, account, password)
+        try:
+            WebDriverWait(driver, 10).until(
+                EC.visibility_of(a_elements[i])
+            )
+            a_elements[i].click()
+            time.sleep(2)
+            # 一层frame特点：id = "iframe"
+            iframe1 = WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.ID, 'iframe'))
+            )
             driver.switch_to.frame(iframe1)
-            driver.switch_to.frame(iframes[j])
-            PPT_Window = driver.find_element(By.CLASS_NAME, "imglook")
-            # 使用 execute_script() 方法将元素滚动到可见区域
-            driver.execute_script("arguments[0].scrollIntoViewIfNeeded(true);", PPT_Window)
-            time.sleep(1)
-            mouseMoveTo(PPT_Window, driver)
-            for k in range(10000):
-                win32api.mouse_event(win32con.MOUSEEVENTF_WHEEL, 0, 0, -10)
-            time.sleep(1)
-        driver.quit()
+            # 二层frame为视频层,视频可能存在多个
+            iframes = WebDriverWait(driver, 10).until(
+                EC.visibility_of_all_elements_located(
+                    (By.CSS_SELECTOR, 'iframe[src="/ananas/modules/pdf/index.html?v=2022-1202-1135"]'))
+            )
+            print("number of PPT in section %s " % i, ": %s" % len(iframes))
+
+            if len(iframes) == 0:
+                driver.quit()
+                continue;
+
+            for j in range(len(iframes)):
+                driver.switch_to.default_content()
+                driver.switch_to.frame(iframe1)
+                driver.switch_to.frame(iframes[j])
+                PPT_Window = WebDriverWait(driver, 10).until(
+                    EC.visibility_of_element_located((By.CLASS_NAME, "imglook"))
+                )
+                # 使用 execute_script() 方法将元素滚动到可见区域
+                driver.execute_script("arguments[0].scrollIntoViewIfNeeded(true);", PPT_Window)
+                time.sleep(1)
+                mouseMoveTo(PPT_Window, driver)
+                for k in range(10000):
+                    win32api.mouse_event(win32con.MOUSEEVENTF_WHEEL, 0, 0, -10)
+                time.sleep(1)
+
+        except Exception:
+            print('error from ',i)
+
+        finally:
+            driver.quit()
 
 
 def create_base_page(url, account, password):
     retryTime = 0
-    while retryTime < 5:
+    while retryTime < 50000:
         try:
             # 创建浏览器实例
             driver = webdriver.Chrome()
@@ -203,17 +243,21 @@ def create_base_page(url, account, password):
 
 
 def create_and_login(url, account, password):
-    (driver, a_elements) = create_base_page(url, account, password)
+    # 创建基础页面
+    driver, a_elements = create_base_page(url, account, password)
     print("全部的章节数量：", len(a_elements))
 
     # 找到 onetoone 下的所有 span 元素
-    span_elements = driver.find_elements(By.CLASS_NAME, 'roundpointStudent')
+    span_elements = WebDriverWait(driver, 10).until(
+        EC.visibility_of_all_elements_located((By.CLASS_NAME, 'roundpointStudent'))
+    )
 
     # 需要学习的 a 编号
     ret = []
 
     print("-----------------------未完成章节列表---------------------")
     for i in range(len(span_elements)):
+
         if 'orange01' in span_elements[i].get_attribute('class'):
             spans = a_elements[i].find_elements(By.TAG_NAME, "span")
             add = 1
@@ -233,19 +277,22 @@ def create_and_login(url, account, password):
 
 def main():
     # 替换为你的mooc网址
-    url = ""
+    url = "http://mooc.mooc.ucas.edu.cn/mycourse/studentstudy?chapterId=12258&courseId=350140000006718&clazzid=350140000010840&enc=e079a683a052b56ec5b571e8b56d5fd1"
     # mooc账号
-    account = ""
+    account = "18873701282"
     # mooc密码
-    password = ""
+    password = "hjs991022"
 
     n = int(input("请输入视频线程数量："))
 
     idx = create_and_login(url, account, password)
     while len(idx) != 0:
-        deal_vedios(idx, n, url, account, password)
-        deal_PPT(idx, url, account, password)
-        idx = create_and_login(url, account, password)
+        try:
+            deal_vedios(idx, n, url, account, password)
+            deal_PPT(idx, url, account, password)
+            idx = create_and_login(url, account, password)
+        except Exception:
+            print(Exception)
 
     print("刷完啦！！")
 
