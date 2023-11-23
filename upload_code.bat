@@ -19,7 +19,7 @@ git commit -m "%COMMIT_MESSAGE%"
 
 REM 拉取远程代码
 echo Pulling changes from GitHub...
-git pull origin main
+git pull origin main --allow-unrelated-histories
 IF %ERRORLEVEL% NEQ 0 (
     echo Pull failed. Resolve conflicts and run the script again.
     exit /b %ERRORLEVEL%
@@ -37,7 +37,7 @@ IF %ERRORLEVEL% EQU 0 (
 
 REM 推送到GitHub
 echo Pushing changes to GitHub...
-git push --set-upstream origin main
+git push -u --force origin main
 IF %ERRORLEVEL% NEQ 0 (
     echo Push failed. Check your credentials and try again.
     exit /b %ERRORLEVEL%
