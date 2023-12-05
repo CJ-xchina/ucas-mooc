@@ -5,7 +5,8 @@
 @File    ：main.py
 @IDE     ：PyCharm 
 @Author  ：Cjx_1023
-@Date    ：2023/11/9 15:39 
+@Modifier：cchan
+@UpDateTime    ：2023/11/25 19:21
 '''
 import numpy as np
 import win32api
@@ -79,8 +80,6 @@ def process_video(idx, url, account, password, maxThreads):
             )
             driver.execute_script("arguments[0].scrollIntoViewIfNeeded(true);", startButton)
 
-
-
             # 播放视频
             startButton.click()
             time.sleep(0.5)
@@ -88,8 +87,19 @@ def process_video(idx, url, account, password, maxThreads):
             controlButton = WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located((By.CLASS_NAME, "vjs-button"))
             )
+
             # 暂停视频
             controlButton.click()
+
+            # 定位到倍速按钮
+            speedButton = WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.CLASS_NAME, "vjs-playback-rate"))
+            )
+
+            # 设置播放速度为2倍速
+            speedButton.click()
+            speedButton.click()
+            speedButton.click()
 
             # 定位到进度条元素
             progress_element = WebDriverWait(driver, 10).until(
@@ -121,18 +131,19 @@ def process_video(idx, url, account, password, maxThreads):
             controlButton.click()
             print("\n thread %s is watching vedio：" % (i + 1), "总时长：%s" % str(during), "已观看时长：%s" % str(last),
                   "剩余时长：%s" % str(during - last))
-            for _ in tqdm(range((during - last + 3) // 3), desc=threading.current_thread().name, position=idx % maxThreads):
+            for _ in tqdm(range((during - last + 3) // 3), desc=threading.current_thread().name,
+                          position=idx % maxThreads):
                 time.sleep(3)
 
         print("-------%s thread finish %s -------" % (threading.current_thread().name, idx))
-    except Exception:
-        print(Exception)
+    except Exception as i:
+        print(i)
 
     finally:
         driver.quit()
 
 
-def deal_vedios(idx, max_threads, url, account, password):
+def deal_videos(idx, max_threads, url, account, password):
     threadPool = ThreadPoolExecutor(max_workers=max_threads, thread_name_prefix="视频处理线程_")
     futures = []
 
@@ -169,7 +180,7 @@ def deal_PPT(index, url, account, password):
 
             if len(iframes) == 0:
                 driver.quit()
-                continue;
+                continue
 
             for j in range(len(iframes)):
                 driver.switch_to.default_content()
@@ -186,8 +197,8 @@ def deal_PPT(index, url, account, password):
                     win32api.mouse_event(win32con.MOUSEEVENTF_WHEEL, 0, 0, -10)
                 time.sleep(1)
 
-        except Exception:
-            print('error from ',i)
+        except Exception as i:
+            print('error from ', i)
 
         finally:
             driver.quit()
@@ -288,11 +299,11 @@ def main():
     idx = create_and_login(url, account, password)
     while len(idx) != 0:
         try:
-            deal_vedios(idx, n, url, account, password)
+            deal_videos(idx, n, url, account, password)
             deal_PPT(idx, url, account, password)
             idx = create_and_login(url, account, password)
-        except Exception:
-            print(Exception)
+        except Exception as i:
+            print(i)
 
     print("刷完啦！！")
 
